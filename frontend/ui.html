@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Google Sheets Sync</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', sans-serif;
+      background-color: rgba(213,209,203,1);
+      width: 500px;
+      height: 540px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .header {
+      position: absolute;
+      top: 50px;
+      left: 77px;
+    }
+
+    .header-title {
+      font-size: 16px;
+      color: rgba(103,99,93,1);
+      font-weight: 500;
+      margin: 0;
+    }
+
+    .header-subtitle {
+      font-size: 12px;
+      color: rgba(166,161,155,1);
+      margin-top: 4px;
+    }
+
+    .version {
+      position: absolute;
+      top: 50px;
+      right: 77px;
+      font-size: 12px;
+      color: rgba(166,161,155,1);
+      font-weight: 500;
+      user-select: none;
+    }
+
+    .button-wrapper {
+      position: absolute;
+      top: 435px;
+      left: 50px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .btn {
+      padding: 12px 32px;
+      border-radius: 20px;
+      font-size: 18px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+
+    .btn-get {
+      background: rgba(222,218,215,1);
+      color: #000;
+    }
+
+    .btn-get:hover {
+      background-color: #d5d1cb;
+    }
+
+    .btn-sync {
+      background: rgba(239,235,229,1);
+      color: #000;
+    }
+
+    .btn-sync:hover {
+      background-color: #e1ddd7;
+    }
+
+    .status {
+      margin-left: 16px;
+      font-size: 14px;
+      color: #4a4846;
+      min-width: 140px;
+      font-weight: 500;
+      user-select: none;
+      animation: pulseText 2s ease-in-out infinite;
+    }
+
+    @keyframes pulseText {
+      0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+      50% {
+        opacity: 0.7;
+        transform: scale(1.05);
+      }
+    }
+
+    .circles {
+      position: absolute;
+      top: 165px;
+      left: 53px;
+      height: 195px;
+      display: flex;
+      align-items: center;
+    }
+
+    .half-circle {
+      width: 97.5px;
+      height: 195px;
+      background: rgba(235,88,45,1);
+      border-top-left-radius: 97.5px;
+      border-bottom-left-radius: 97.5px;
+      margin: 0;
+      position: relative;
+      z-index: 2;
+      transform-style: preserve-3d;
+      backface-visibility: hidden;
+      transition: opacity 0.3s ease;
+    }
+
+    .half-circle.center {
+      margin-left: -1px;
+      z-index: 1;
+    }
+
+    .full-circle {
+      width: 195px;
+      height: 195px;
+      background: rgba(235,88,45,1);
+      border-radius: 50%;
+      margin-left: -1px;
+      z-index: 0;
+    }
+
+    /* Idle sync animation */
+    .half-circle.animate-left {
+      animation: slideLeft 1.5s ease-in-out infinite alternate;
+    }
+
+    .half-circle.center.animate-left-delay {
+      animation: slideLeft 1.5s ease-in-out infinite alternate;
+      animation-delay: 0.3s;
+    }
+
+    @keyframes slideLeft {
+      0% { transform: translateX(0); }
+      50% { transform: translateX(-25px); }
+      100% { transform: translateX(0); }
+    }
+
+    /* Creative animation after button press */
+    .half-circle.explode-left {
+      animation: explodeBackScale 2s ease-in-out infinite alternate;
+      transform-style: preserve-3d;
+      backface-visibility: hidden;
+      z-index: 3;
+    }
+
+    .half-circle.center.explode-center {
+      animation: centerTiltOpacity 2s ease-in-out infinite alternate;
+      z-index: 2;
+    }
+
+    @keyframes explodeBackScale {
+      0% {
+        transform: translateX(0) scale(1) translateZ(0);
+        opacity: 1;
+      }
+      50% {
+        transform: translateX(-40px) scale(0.7) translateZ(-30px);
+        opacity: 0.5;
+      }
+      100% {
+        transform: translateX(0) scale(1) translateZ(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes centerTiltOpacity {
+      0% {
+        transform: rotateZ(0deg);
+        opacity: 1;
+      }
+      50% {
+        transform: rotateZ(-10deg);
+        opacity: 0.7;
+      }
+      100% {
+        transform: rotateZ(0deg);
+        opacity: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <p class="header-title">Google Sheets Sync</p>
+    <p class="header-subtitle">Created by Vlad Shinkevich</p>
+  </div>
+
+  <div class="version">v1.0.0</div>
+
+  <div class="circles" id="circleContainer">
+    <div class="half-circle" id="leftHalf"></div>
+    <div class="half-circle center" id="centerHalf"></div>
+    <div class="full-circle" id="rightFull"></div>
+  </div>
+
+  <div class="button-wrapper">
+    <button class="btn btn-get" id="getDataBtn">Get data</button>
+    <button class="btn btn-sync" id="syncBtn">Sync</button>
+    <div class="status" id="statusMsg"></div>
+  </div>
+
+  <script>
+    const leftHalf = document.getElementById('leftHalf');
+    const centerHalf = document.getElementById('centerHalf');
+    const rightFull = document.getElementById('rightFull');
+    const syncBtn = document.getElementById('syncBtn');
+    const getDataBtn = document.getElementById('getDataBtn');
+    const statusMsg = document.getElementById('statusMsg');
+
+    function startIdleAnimation() {
+      leftHalf.classList.add('animate-left');
+      centerHalf.classList.add('animate-left-delay');
+    }
+
+    function stopIdleAnimation() {
+      leftHalf.classList.remove('animate-left');
+      centerHalf.classList.remove('animate-left-delay');
+    }
+
+    function startCreativeAnimation() {
+      stopIdleAnimation();
+      leftHalf.classList.remove('explode-left');
+      centerHalf.classList.remove('explode-center');
+      rightFull.classList.remove('explode');
+
+      leftHalf.classList.add('explode-left');
+      centerHalf.classList.add('explode-center');
+    }
+
+    function resetToIdleAnimation() {
+      leftHalf.classList.remove('explode-left');
+      centerHalf.classList.remove('explode-center');
+      rightFull.classList.remove('explode');
+      startIdleAnimation();
+    }
+
+    window.onload = () => {
+      startIdleAnimation();
+    };
+
+    getDataBtn.onclick = () => {
+      startCreativeAnimation();
+      statusMsg.textContent = 'Loading data...';
+      parent.postMessage({ pluginMessage: { type: 'getData' } }, '*');
+    };
+
+    syncBtn.onclick = () => {
+      startCreativeAnimation();
+      statusMsg.textContent = 'Creating instances...';
+      parent.postMessage({ pluginMessage: { type: 'sync' } }, '*');
+    };
+
+    onmessage = async (event) => {
+      const msg = event.data.pluginMessage;
+
+      if (msg.type === 'fetchJson') {
+        try {
+          const res = await fetch(msg.url);
+          const data = await res.json();
+          parent.postMessage({ pluginMessage: { type: 'fetchJsonResult', success: true, data } }, '*');
+        } catch (err) {
+          parent.postMessage({ pluginMessage: { type: 'fetchJsonResult', success: false, error: err.message } }, '*');
+        }
+      }
+
+      if (msg.type === 'fetchImage') {
+        try {
+          const res = await fetch(msg.url);
+          const buffer = await res.arrayBuffer();
+          parent.postMessage({ pluginMessage: { type: 'fetchImageResult', success: true, data: buffer, url: msg.url } }, '*');
+        } catch (err) {
+          parent.postMessage({ pluginMessage: { type: 'fetchImageResult', success: false, error: err.message, url: msg.url } }, '*');
+        }
+      }
+
+      if (msg.type === 'response') {
+        const { success, error, message, action } = msg.data;
+        
+        if (success) {
+          statusMsg.textContent = message;
+        } else {
+          statusMsg.textContent = `Error: ${error}`;
+        }
+        
+        // For getData action, reset immediately
+        if (action === 'getData') {
+          setTimeout(resetToIdleAnimation, 2000);
+        } 
+        // For sync action, keep message visible longer
+        else if (action === 'sync') {
+          setTimeout(resetToIdleAnimation, 3000);
+        }
+      }
+    };
+  </script>
+</body>
+</html>

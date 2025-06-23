@@ -1,0 +1,17 @@
+{
+  "name": "Report App",
+  "id": "1516913389715369896",
+  "api": "1.0.0",
+  "main": "code.js",
+  "capabilities": [],
+  "enableProposedApi": false,
+  "documentAccess": "dynamic-page",
+  "editorType": [
+    "figma"
+  ],
+  "ui": "ui.html",
+  "networkAccess": {
+    "reasoning": "MyPlugin queries httpbin.org/get for example responses.",
+    "allowedDomains": ["*"]
+  }
+}
