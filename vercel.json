@@ -8,7 +8,12 @@
   ],
   "routes": [
     {
-      "src": "/proxy",
+      "src": "/proxy(.*)",
+      "dest": "/api/server.js",
+      "methods": ["GET", "OPTIONS"]
+    },
+    {
+      "src": "/api/server",
       "dest": "/api/server.js"
     }
   ]
