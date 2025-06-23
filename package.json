@@ -1,0 +1,13 @@
+{
+  "name": "figma-google-sync",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "node api/proxy.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.2"
+  },
+  "engines": {
+    "node": "18.x"
+  }
+}

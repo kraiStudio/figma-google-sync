@@ -11,10 +11,10 @@ module.exports = async (req, res) => {
       throw new Error('GAS_ENDPOINT environment variable is missing');
     }
 
-    console.log(`Proxying to GAS URL: ${gasUrl}`);
+    console.log(`Proxying to: ${gasUrl}`);
     const response = await axios.get(gasUrl, {
       params: req.query,
-      timeout: 8000
+      timeout: 10000
     });
 
     res.status(response.status).json(response.data);
@@ -22,7 +22,8 @@ module.exports = async (req, res) => {
     console.error('Proxy error:', error.message);
     res.status(500).json({
       error: 'Proxy error',
-      details: error.message
+      message: error.message,
+      url: gasUrl
     });
   }
 };
